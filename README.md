@@ -23,3 +23,13 @@ npm install
 npm run dev
 ```
 
+To preview and edit an example video, head to `[localhost:3000/edit/](http://localhost:3000/edit/191d7f6c-fefd-4045-96b5-718c73433a90)`. If you want to generate your own videos, set up the following environment variables to use AI services for generating assets and an AWS bucket for storing assets in `/websocket-server/.env`:
+
+```
+OPENAI_API_KEY=<your-key>
+ELEVEN_API_KEY=<your-key>
+DEEPGRAM_API_KEY=<your-key>
+
+AWS_ACCESS_KEY_ID=<your-key>
+AWS_SECRET_ACCESS_KEY=<your-key>
+```
