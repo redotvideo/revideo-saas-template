@@ -39,7 +39,7 @@ io.on('connection', (socket) => {
         const imageFileName = `${jobId}-image-${index}.png`;
         await dalleGenerate(imagePrompt, imageFileName);
         await uploadFileToBucket(imageFileName, `${jobId}/image-${index}.png`);
-        return `https://${process.env["BUCKET_NAME"]}.s3.amazonaws.com/${jobId}/image-${index}.png`; // Return the file path after upload
+        return `https://revideo-example-assets.s3.amazonaws.com/${jobId}/image-${index}.png`; // Return the file path after upload
       });
 
       const words = await getWordTimestamps(`${jobId}-audio.wav`);
