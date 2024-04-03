@@ -1,0 +1,31 @@
+{
+  "name": "websocket-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsc-watch --onSuccess \"node dist/server.js\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "@types/socket.io": "^3.0.2",
+    "@types/uuid": "^9.0.8",
+    "tsc-watch": "^6.2.0",
+    "typescript": "^5.4.3"
+  },
+  "dependencies": {
+    "@deepgram/sdk": "^3.1.9",
+    "aws-sdk": "^2.1588.0",
+    "axios": "^1.6.8",
+    "dotenv": "^16.4.5",
+    "openai": "^4.29.2",
+    "socket.io": "^4.7.5",
+    "uuid": "^9.0.1"
+  }
+}
