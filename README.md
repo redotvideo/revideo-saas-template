@@ -7,3 +7,19 @@ The Saas Template consists of three main components:
 - `/revideo`: Defines the video template using Revideo
 - `/ui`: Frontend with video preview & editing functionality, built with the [NextJS App Router](https://nextjs.org/docs/app)
 - `/websocket-server`: Backend logic for generating AI assets such as text-to-speech APIs and image generators, and storing them in an AWS bucket
+
+
+## Get Started
+
+#### in `/ui`:
+```
+npm install
+npm run dev
+```
+
+#### in `/websocket-server`:
+```
+npm install
+npm run dev
+```
+
