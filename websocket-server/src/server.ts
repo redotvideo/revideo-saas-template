@@ -3,12 +3,81 @@ require('dotenv').config();
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { getVideoScript, getImagePromptFromScript } from './ai/llm';
-import { v4 as uuidv4 } from 'uuid';
 import { generateAudio } from './ai/text-to-speech';
 import { dalleGenerate } from './ai/sdxl';
-import { uploadFileToBucket } from './storage/bucket';
+import { deleteLocalFile, uploadFileToBucket, uploadToBucketAndDeleteLocalFile } from './storage/bucket';
 import { writeFile } from 'fs/promises';
-import { getWordTimestamps } from './ai/transcription'
+import { getWordTimestamps } from './ai/transcription';
+import axios from 'axios';
+import express from 'express';
+import { createWriteStream } from 'fs';
+
+
+const SERVER_URL = 'http://localhost:5005/render';
+const CLIENT_WEBHOOK_URL = 'http://localhost:4000/receive-video';
+
+const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.post('/receive-video', async (req, res) => {
+  const { jobId, status, downloadLink, error } = req.body;
+  
+    if (status === 'error') {
+      console.error(`Error with job ${jobId}:`, error);
+      res.status(200).send("Acknowledged error.");
+
+      io.to(jobId).emit('videoExportDone', { 
+        status: status, 
+        message: error 
+      });
+
+    } else if (status === 'success') {
+      res.status(200).send("Acknowledged success.");
+
+      try {
+        const response = await axios({
+          method: 'get',
+          url: downloadLink,
+          responseType: 'stream'
+        });
+  
+        const outputPath = `./${jobId}.mp4`;
+        const writer = createWriteStream(outputPath);
+  
+        response.data.pipe(writer);
+  
+        await new Promise((resolve, reject) => {
+          writer.on('finish', resolve);
+          writer.on('error', reject);
+        });
+  
+        console.log(`Video file downloaded as ${outputPath}`);
+  
+        const bucketPath = `result-${jobId}.mp4`; 
+        await uploadToBucketAndDeleteLocalFile(outputPath, bucketPath);
+  
+        console.log(`Video file uploaded to bucket at ${bucketPath}`);
+  
+        io.to(jobId).emit('videoExportDone', { 
+          status: status, 
+          downloadLink: downloadLink 
+        });
+  
+      } catch (err: any) {
+        console.error('Error processing video file:', err);
+        io.to(jobId).emit('videoExportDone', { 
+          status: 'error', 
+          message: err.message 
+        });
+      }
+  
+    } else {
+      console.error(`Unknown status for job ${jobId}`);
+      res.status(400).send('Unknown status received.');
+    }
+});
+
 
 const httpServer = createServer();
 const io = new Server(httpServer, {
@@ -31,20 +100,18 @@ io.on('connection', (socket) => {
       
       await generateAudio(script, voiceName, `${jobId}-audio.wav`);
       await uploadFileToBucket(`${jobId}-audio.wav`, `${jobId}/audio.wav`);
-      console.log("done with audio");
+      const words = await getWordTimestamps(`${jobId}-audio.wav`);
+      await deleteLocalFile(`${jobId}-audio.wav`);
       
-    // Generate and upload 5 images concurrently and collect the filenames
       const imagePromises = Array.from({ length: 5 }).map(async (_, index) => {
         const imagePrompt = await getImagePromptFromScript(script);
         const imageFileName = `${jobId}-image-${index}.png`;
         await dalleGenerate(imagePrompt, imageFileName);
-        await uploadFileToBucket(imageFileName, `${jobId}/image-${index}.png`);
+        await uploadToBucketAndDeleteLocalFile(imageFileName, `${jobId}/image-${index}.png`);
         return `https://revideo-example-assets.s3.amazonaws.com/${jobId}/image-${index}.png`; // Return the file path after upload
       });
 
-      const words = await getWordTimestamps(`${jobId}-audio.wav`);
       const imageFileNames = await Promise.all(imagePromises);
-  
   
       const metadata = {
         audioUrl: `https://revideo-example-assets.s3.amazonaws.com/${jobId}/audio.wav`,
@@ -54,7 +121,7 @@ io.on('connection', (socket) => {
     
       const metadataContent = JSON.stringify(metadata);
       await writeFile(`${jobId}-metadata.json`, metadataContent);
-      await uploadFileToBucket(`${jobId}-metadata.json`, `${jobId}/metadata.json`);
+      await uploadToBucketAndDeleteLocalFile(`${jobId}-metadata.json`, `${jobId}/metadata.json`);
       console.log("uploaded metadata");
 
       socket.emit('taskCompleted', { 
@@ -67,10 +134,30 @@ io.on('connection', (socket) => {
     console.log('user disconnected');
   });
 
-  // Add more event listeners as needed
+  socket.on('exportVideo', async (metadata) => {
+
+    try {
+      const response = await axios.post(SERVER_URL, {
+        variables: metadata,
+        callbackUrl: CLIENT_WEBHOOK_URL
+      });
+
+      socket.join(response.data.jobId); // Join a room for the jobId to communicate with this client specifically
+  
+    } catch (error) {
+      console.error('Error sending render request:', error);
+    }
+  });
+
 });
 
+// Start both the WebSocket server and the Express server
 const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {
   console.log(`WebSocket server listening on port ${PORT}`);
+});
+
+const EXPRESS_PORT = 4000; // Port for the Express server to handle callbacks
+app.listen(EXPRESS_PORT, () => {
+    console.log(`Express server running on port ${EXPRESS_PORT}`);
 });

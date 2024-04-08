@@ -1,5 +1,6 @@
 import * as AWS from "aws-sdk";
 import * as fs from "fs";
+import { unlink } from 'fs/promises';
 
 const s3 = new AWS.S3();
 
@@ -19,3 +20,26 @@ export async function uploadFileToBucket(localPath: string, destinationPath: str
 		console.error("Error uploading file: ", err);
 	}
 }
+
+export async function deleteLocalFile(localPath: string) {
+	try {
+	  await unlink(localPath);
+	  console.log(`Local file deleted: ${localPath}`);
+	} catch (error) {
+	  console.error(`Error deleting local file: ${localPath}`, error);
+	  throw error;
+	}
+  }
+  
+  // Now, update the uploadToBucketAndDeleteLocalFile function to use deleteLocalFile
+  export async function uploadToBucketAndDeleteLocalFile(localPath: string, destinationPath: string) {
+	try {
+	  await uploadFileToBucket(localPath, destinationPath);
+	  console.log(`File uploaded to bucket at ${destinationPath}`);
+	  await deleteLocalFile(localPath); // Use the new deleteLocalFile function
+	} catch (error) {
+	  console.error('Error uploading to bucket or deleting local file:', error);
+	  throw error;
+	}
+  }
+  
