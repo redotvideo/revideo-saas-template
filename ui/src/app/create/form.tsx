@@ -5,6 +5,7 @@ import { FormEvent } from 'react';
 import io from 'socket.io-client';
 import { Socket } from 'socket.io-client';
 import { v4 as uuidv4 } from 'uuid';
+import { globals } from '@/globals';
 
 function SubmitButton({ isProcessing }: { isProcessing: boolean}) {
   return (
@@ -26,16 +27,14 @@ export default function VideoForm() {
   const router = useRouter();
 
   useEffect(() => {
-    // Connect to WebSocket server
-    const newSocket = io('http://localhost:3001'); // Use your WebSocket server URL
+    const newSocket = io(globals.websocketServerUrl);
     setSocket(newSocket);
   
     newSocket.on('taskCompleted', (data) => {
-      setIsProcessing(false); // Stop submitting when task is completed
+      setIsProcessing(false);
       router.push(`/edit/${data.jobId}`);
     });
   
-    // Return a cleanup function
     return () => {
       newSocket.disconnect();
     };
@@ -43,7 +42,7 @@ export default function VideoForm() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setIsProcessing(true); // Start submitting
+    setIsProcessing(true);
     const formData = new FormData(event.target as HTMLFormElement);
     const textInput = formData.get('topic');
     console.log("topic", textInput);
@@ -52,7 +51,7 @@ export default function VideoForm() {
     socket?.emit('startTask', { jobId, textInput });
 
     socket?.on('connect_error', (err) => {
-      setIsProcessing(false); // Stop submitting on connection error
+      setIsProcessing(false); 
       console.log(`connect_error due to ${err.message}`);
     });
   };

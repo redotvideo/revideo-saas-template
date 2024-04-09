@@ -6,6 +6,7 @@ import { Socket } from 'socket.io-client';
 import { MotionCanvasPlayerProps } from "@revideo/player";
 import { ComponentProps } from "react";
 import "../../../../public/revideo-project-styles.css";
+import { globals } from "@/globals";
 
 declare global {
   namespace JSX {
@@ -92,21 +93,7 @@ export default function Edit({params}: {params: {id: string}}) {
     }, [metadata]);
 
     useEffect(() => {
-      const fontLink = document.createElement('link');
-      fontLink.href = 'https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap';
-      fontLink.rel = 'preload';
-      fontLink.as = 'style';
-      fontLink.onload = () => fontLink.rel = 'stylesheet';
-
-      document.head.appendChild(fontLink);
-
-      return () => {
-          document.head.removeChild(fontLink);
-      };
-  }, []);
-
-    useEffect(() => {
-      const newSocket = io('http://localhost:3001');
+      const newSocket = io(globals.websocketServerUrl);
       setSocket(newSocket);
 
       newSocket.on('videoExportDone', (data) => {
@@ -156,14 +143,13 @@ export default function Edit({params}: {params: {id: string}}) {
                     <option value="white">White</option>
                   </select>
                 </div>
-                {/* Add more form elements as needed */}
               </form>
               <button
             className="rounded-md mt-4 bg-gray-700 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             onClick={sendMetadata}
             disabled={isExporting}
           >
-            {isExporting ? 'Exporting...' : 'Generate Video'} {/* Change button text based on isExporting */}
+            {isExporting ? 'Exporting...' : 'Generate Video'}
           </button>
 
           {downloadUrl && ( 
@@ -177,7 +163,7 @@ export default function Edit({params}: {params: {id: string}}) {
             </div>
 
             <div className="w-[35%]">
-              { metadata && assetsLoaded ? ( // Check if metadata is not null
+              { metadata && assetsLoaded ? (
               <revideo-player 
                     src="/revideo-project.js" 
                     variables={JSON.stringify(metadata)}          

@@ -11,10 +11,8 @@ import { getWordTimestamps } from './ai/transcription';
 import axios from 'axios';
 import express from 'express';
 import { createWriteStream } from 'fs';
+import { globals } from './globals';
 
-
-const SERVER_URL = 'http://localhost:5005/render';
-const CLIENT_WEBHOOK_URL = 'http://localhost:4000/receive-video';
 
 const app = express();
 app.use(express.json());
@@ -108,13 +106,13 @@ io.on('connection', (socket) => {
         const imageFileName = `${jobId}-image-${index}.png`;
         await dalleGenerate(imagePrompt, imageFileName);
         await uploadToBucketAndDeleteLocalFile(imageFileName, `${jobId}/image-${index}.png`);
-        return `https://revideo-example-assets.s3.amazonaws.com/${jobId}/image-${index}.png`; // Return the file path after upload
+        return `https://${globals.bucket.name}.s3.amazonaws.com/${jobId}/image-${index}.png`; // Return the file path after upload
       });
 
       const imageFileNames = await Promise.all(imagePromises);
   
       const metadata = {
-        audioUrl: `https://revideo-example-assets.s3.amazonaws.com/${jobId}/audio.wav`,
+        audioUrl: `https://${globals.bucket.name}.s3.amazonaws.com/${jobId}/audio.wav`,
         images: imageFileNames,
         words: words
       };
@@ -137,9 +135,9 @@ io.on('connection', (socket) => {
   socket.on('exportVideo', async (metadata) => {
 
     try {
-      const response = await axios.post(SERVER_URL, {
+      const response = await axios.post(`${globals.revideoServer.host}:${globals.revideoServer.port}/render`, {
         variables: metadata,
-        callbackUrl: CLIENT_WEBHOOK_URL
+        callbackUrl: `${globals.expressServer.host}:${globals.expressServer.port}/receive-video`
       });
 
       socket.join(response.data.jobId); // Join a room for the jobId to communicate with this client specifically
@@ -151,13 +149,10 @@ io.on('connection', (socket) => {
 
 });
 
-// Start both the WebSocket server and the Express server
-const PORT = process.env.PORT || 3001;
-httpServer.listen(PORT, () => {
-  console.log(`WebSocket server listening on port ${PORT}`);
+httpServer.listen(globals.socketServer.port, () => {
+  console.log(`WebSocket server listening on port ${globals.socketServer.port}`);
 });
 
-const EXPRESS_PORT = 4000; // Port for the Express server to handle callbacks
-app.listen(EXPRESS_PORT, () => {
-    console.log(`Express server running on port ${EXPRESS_PORT}`);
+app.listen(globals.expressServer.port, () => {
+    console.log(`Express server running on port ${globals.expressServer.port}`);
 });

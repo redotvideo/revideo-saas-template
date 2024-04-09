@@ -14,7 +14,7 @@ export default makeScene2D(function* (view) {
 
   const duration = words[words.length-1].end + 0.5; // add one half additional second
 
-  view.add(
+  yield view.add(
       <Audio
         src={audioUrl}
         play={true}

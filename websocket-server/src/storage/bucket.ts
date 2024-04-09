@@ -1,6 +1,7 @@
 import * as AWS from "aws-sdk";
 import * as fs from "fs";
 import { unlink } from 'fs/promises';
+import { globals } from "../globals";
 
 const s3 = new AWS.S3();
 
@@ -8,7 +9,7 @@ export async function uploadFileToBucket(localPath: string, destinationPath: str
 	const fileContent = await fs.promises.readFile(localPath);
 
 	const params = {
-		Bucket: "revideo-example-assets",
+		Bucket: globals.bucket.name,
 		Key: destinationPath,
 		Body: fileContent,
 	};
@@ -31,12 +32,11 @@ export async function deleteLocalFile(localPath: string) {
 	}
   }
   
-  // Now, update the uploadToBucketAndDeleteLocalFile function to use deleteLocalFile
   export async function uploadToBucketAndDeleteLocalFile(localPath: string, destinationPath: string) {
 	try {
 	  await uploadFileToBucket(localPath, destinationPath);
 	  console.log(`File uploaded to bucket at ${destinationPath}`);
-	  await deleteLocalFile(localPath); // Use the new deleteLocalFile function
+	  await deleteLocalFile(localPath);
 	} catch (error) {
 	  console.error('Error uploading to bucket or deleting local file:', error);
 	  throw error;
