@@ -4,7 +4,7 @@ The Revideo Saas template demonstrates how you can build web-based video apps wi
 
 https://github.com/redotvideo/revideo-saas-template/assets/122226645/cf09941c-faa6-414b-bfb2-a22017ba15b2
 
-
+<br/>
 
 ## Project Structure
 
@@ -32,8 +32,9 @@ This folder contains the main backend logic of our project. It has two main func
 - When a user submits a description of their Youtube Short, the backend uses several AI services to generate assets (e.g. it writes a script with GPT-4 and generates background images with Dall-E). These assets are uploaded to an AWS bucket, as well as a json file containing the variables of the revideo project.
 - When a user triggers a video export, the server redirects this request to the revideo service and uploads the finished video to the AWS bucket.
 
+<br/>
 
-## Get Started
+## Getting Started
 
 To run the project locally, execute the following commands:
 
