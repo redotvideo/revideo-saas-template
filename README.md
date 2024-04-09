@@ -2,6 +2,10 @@
 
 The Revideo Saas template demonstrates how you can build web-based video apps with Revideo. This example application lets users generate Youtube Shorts from a text description.
 
+https://github.com/redotvideo/revideo-saas-template/assets/122226645/cf09941c-faa6-414b-bfb2-a22017ba15b2
+
+
+
 ## Project Structure
 
 The Saas Template consists of three main components:
