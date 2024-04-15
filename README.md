@@ -55,6 +55,8 @@ npx revideo serve --projectFile vite.config.ts
 
 Note that this folder contains a normal revideo project. You can also simply open the editor by running `npm start`.
 
+If you want to change your animation, you need to run `npm run build` and use the `project.js` file that gets generated this way to replace `/ui/public/revideo-project.js`. 
+
 
 ### in `/websocket-server`:
 
