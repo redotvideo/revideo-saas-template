@@ -1,3 +1,5 @@
+###  🚨 This example project uses a very old version of Revideo and is currently not maintained anymore. Please refer to the current [Saas Template](https://github.com/redotvideo/examples/tree/main/saas-template)
+
 # Revideo Saas Template 💻
 
 The Revideo Saas template demonstrates how you can build web-based video apps with Revideo. This example application lets users generate Youtube Shorts from a text description.
